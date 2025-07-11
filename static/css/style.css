@@ -1,0 +1,48 @@
+/* Global page background */
+body {
+  background-color: #f8f9fa;
+}
+
+/* Flash alert hide animation */
+.alert {
+  transition: opacity 0.5s ease;
+}
+.alert.hide {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* Kanban columns/panels */
+.row > .col-md-4 {
+  margin-bottom: 1.5rem;
+}
+.card {
+  border-radius: 0.25rem;
+}
+
+/* Task cards inside list-group-item */
+.list-group-item {
+  background: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 0.25rem;
+  margin-bottom: 0.5rem;
+  cursor: grab;
+  padding: 0.75rem;
+}
+
+/* Buttons inline spacing */
+.list-group-item form {
+  display: inline-block;
+  margin-right: 0.5rem;
+}
+
+/* Small assign-email input */
+.form-control-sm {
+  width: 120px;
+  display: inline-block;
+}
+
+/* Dragging style */
+.dragging {
+  opacity: 0.5;
+}

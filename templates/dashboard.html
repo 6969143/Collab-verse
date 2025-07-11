@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h2>Dashboard</h2>
+<div class="row mb-4">
+  <div class="col">
+    <div class="card text-center">
+      <div class="card-body">
+        <h5>Owned Projects</h5>
+        <p class="display-6">{{ stats.owned_projects }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card text-center">
+      <div class="card-body">
+        <h5>Member Projects</h5>
+        <p class="display-6">{{ stats.member_projects }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card text-center">
+      <div class="card-body">
+        <h5>To Do</h5>
+        <p class="display-6">{{ stats.todo }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row mb-4">
+  <div class="col">
+    <div class="card text-center">
+      <div class="card-body">
+        <h5>In Progress</h5>
+        <p class="display-6">{{ stats.in_progress }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card text-center">
+      <div class="card-body">
+        <h5>Completed</h5>
+        <p class="display-6">{{ stats.completed }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h3>Your Projects</h3>
+<ul class="list-group">
+  {% for p in owned %}
+    <li class="list-group-item">
+      <a href="{{ url_for('projects.detail', proj_id=p.id) }}">{{ p.name }}</a> (Owner)
+    </li>
+  {% endfor %}
+  {% for p in shared %}
+    <li class="list-group-item">
+      <a href="{{ url_for('projects.detail', proj_id=p.id) }}">{{ p.name }}</a> (Member)
+    </li>
+  {% endfor %}
+</ul>
+{% endblock %}
