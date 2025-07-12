@@ -21,14 +21,13 @@ def create_task(project_id, creator, title, description=None, due_date=None):
        not project.members.filter_by(id=creator.id).first():
         return None, "Permission denied"
 
-    task = Task(
-        title=title,
-        description=description,
-        due_date=parse_date(due_date),
-        project_id=project_id,
-        creator_id=creator.id,
-        created_at=datetime.utcnow()
-    )
+    task = Task()
+    task.title = title
+    task.description = description
+    task.due_date = parse_date(due_date)
+    task.project_id = project_id
+    task.creator_id = creator.id
+    task.created_at = datetime.utcnow()
     db.session.add(task)
     db.session.commit()
     return task, None
@@ -133,27 +132,26 @@ def create_task_full(
     if attachment and attachment.filename:
         attachment_filename = attachment.filename
 
-    task = Task(
-        title=title,
-        description=description,
-        status=status or 'todo',
-        due_date=parse_date(due_date),
-        start_date=parse_date(start_date),
-        project_id=project_id,
-        creator_id=creator.id,
-        reporter_id=reporter_id,
-        work_type=work_type,
-        assignee_id=assignee_id,
-        priority=priority,
-        parent_id=parent_id,
-        labels=labels,
-        team=team,
-        flagged=flagged,
-        restrict_to=restrict_to,
-        linked_work_items=linked_work_items,
-        attachment=attachment_filename,
-        created_at=datetime.utcnow()
-    )
+    task = Task()
+    task.title = title
+    task.description = description
+    task.status = status or 'todo'
+    task.due_date = parse_date(due_date)
+    task.start_date = parse_date(start_date)
+    task.project_id = project_id
+    task.creator_id = creator.id
+    task.reporter_id = reporter_id
+    task.work_type = work_type
+    task.assignee_id = assignee_id
+    task.priority = priority
+    task.parent_id = parent_id
+    task.labels = labels
+    task.team = team
+    task.flagged = flagged
+    task.restrict_to = restrict_to
+    task.linked_work_items = linked_work_items
+    task.attachment = attachment_filename
+    task.created_at = datetime.utcnow()
     
     db.session.add(task)
     db.session.commit()

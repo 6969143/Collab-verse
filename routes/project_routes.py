@@ -63,8 +63,12 @@ def add_member(proj_id):
         abort(404)
     if current_user.id != proj.owner_id:
         abort(403)
-    email = request.form["email"]
-    user, err = add_member_to_project(proj, email, inviter=current_user)
+    user_identifier = request.form.get("user_identifier", "").strip()
+    if not user_identifier:
+        flash("Please enter an email or username.", "danger")
+        return redirect(url_for("projects.detail", proj_id=proj_id))
+    
+    user, err = add_member_to_project(proj, user_identifier, inviter=current_user)
     if err:
         flash(err, "danger")
     else:

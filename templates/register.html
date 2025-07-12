@@ -2,20 +2,98 @@
 {% block title %}Register{% endblock %}
 
 {% block content %}
-<h2>Register</h2>
-<form method="post" action="{{ url_for('auth.register') }}">
-  <div class="mb-3">
-    <label class="form-label">Username</label>
-    <input name="username" class="form-control" required>
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="mb-0">Create Account</h3>
+      </div>
+      <div class="card-body">
+        <form method="post" action="{{ url_for('auth.register') }}" id="registerForm">
+          <div class="mb-3">
+            <label class="form-label">Full Name *</label>
+            <input name="full_name" type="text" class="form-control" required 
+                   placeholder="Enter your full name">
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Email Address *</label>
+            <input name="email" type="email" class="form-control" required 
+                   placeholder="Enter your email address">
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Username *</label>
+            <input name="username" type="text" class="form-control" required 
+                   placeholder="Choose a username">
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Role *</label>
+            <select name="role" class="form-select" required>
+              <option value="">Select your role</option>
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Password *</label>
+            <input name="password" type="password" class="form-control" required 
+                   placeholder="Create a secure password" id="password">
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Confirm Password *</label>
+            <input name="confirm_password" type="password" class="form-control" required 
+                   placeholder="Confirm your password" id="confirmPassword">
+          </div>
+          
+          <div class="d-grid">
+            <button type="submit" class="btn btn-primary btn-lg">Create Account</button>
+          </div>
+        </form>
+        
+        <div class="text-center mt-3">
+          <p class="text-muted">Already have an account? 
+            <a href="{{ url_for('auth.login') }}" class="text-decoration-none">Sign in</a>
+          </p>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="mb-3">
-    <label class="form-label">Email</label>
-    <input name="email" type="email" class="form-control" required>
-  </div>
-  <div class="mb-3">
-    <label class="form-label">Password</label>
-    <input name="password" type="password" class="form-control" required>
-  </div>
-  <button class="btn btn-success">Register</button>
-</form>
+</div>
+
+<script>
+document.getElementById('registerForm').addEventListener('submit', function(e) {
+  const password = document.getElementById('password').value;
+  const confirmPassword = document.getElementById('confirmPassword').value;
+  const role = document.querySelector('select[name="role"]').value;
+  const username = document.querySelector('input[name="username"]').value;
+  
+  if (password !== confirmPassword) {
+    e.preventDefault();
+    alert('Passwords do not match! Please try again.');
+    return false;
+  }
+  
+  if (password.length < 8) {
+    e.preventDefault();
+    alert('Password must be at least 8 characters long.');
+    return false;
+  }
+  
+  if (!role) {
+    e.preventDefault();
+    alert('Please select a role.');
+    return false;
+  }
+  
+  if (!username.trim()) {
+    e.preventDefault();
+    alert('Username is required.');
+    return false;
+  }
+});
+</script>
 {% endblock %}

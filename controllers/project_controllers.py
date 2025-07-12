@@ -26,12 +26,18 @@ def get_user_projects(user):
 def get_project(project_id):
     return Project.query.get(project_id)
 
-def add_member_to_project(project, user_email, inviter=None):
-    user = User.query.filter_by(email=user_email).first()
+def add_member_to_project(project, user_identifier, inviter=None):
+    # Search by email or username
+    user = User.query.filter(
+        (User.email == user_identifier) | (User.username == user_identifier)
+    ).first()
+    
     if not user:
-        return None, "User not found"
+        return None, f"User not found with email/username: {user_identifier}"
+    
     if project.members.filter_by(id=user.id).first():
-        return None, "Already a member"
+        return None, f"{user.username or user.email} is already a member"
+    
     project.members.append(user)
     db.session.commit()
     
@@ -41,7 +47,7 @@ def add_member_to_project(project, user_email, inviter=None):
             inviter_name=inviter.username,
             project_name=project.name,
             project_id=project.id,
-            recipient_email=user_email
+            recipient_email=user.email
         )
     
     return user, None

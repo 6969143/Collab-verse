@@ -23,6 +23,7 @@ def create_app():
     
     # Initialize Flask-Mail
     mail = Mail(app)
+    app.extensions['mail'] = mail
 
     login_manager = LoginManager(app)
     login_manager.login_view = "auth.login"  # type: ignore[attr-defined]  

@@ -5,17 +5,9 @@ from models.project import Project
 from models.task import Task
 from models.ticket import Ticket
 from models import db
+from utils.decorators import admin_required
 
 admin_bp = Blueprint("admin", __name__)
-
-def admin_required(f):
-    """Decorator to require admin role"""
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or current_user.role != 'admin':
-            abort(403)
-        return f(*args, **kwargs)
-    decorated_function.__name__ = f.__name__
-    return decorated_function
 
 @admin_bp.route("/dashboard")
 @login_required

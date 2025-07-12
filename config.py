@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv('.env')
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 class Config:
@@ -26,4 +26,4 @@ class Config:
     MAIL_USE_TLS = True
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME', 'your-email@gmail.com')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', 'your-app-password')
-    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'your-email@gmail.com')
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'pavanchandu9391@gmail.com')

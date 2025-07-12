@@ -12,12 +12,11 @@ def create_admin_user():
             return
         
         # Create admin user
-        admin_user = User(
-            username='admin',
-            email='admin@example.com',
-            password_hash=generate_password_hash('admin123'),
-            role='admin'
-        )
+        admin_user = User()
+        admin_user.username = 'admin'
+        admin_user.email = 'admin@example.com'
+        admin_user.password_hash = generate_password_hash('admin123')
+        admin_user.role = 'admin'
         
         db.session.add(admin_user)
         db.session.commit()

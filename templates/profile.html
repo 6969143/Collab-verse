@@ -1,77 +1,318 @@
 {% extends "base.html" %}
 
-{% block title %}Profile - Project Tracker{% endblock %}
+{% block title %}{{ user.full_name or user.username }} - Profile{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-8">
-    <div class="card">
-      <div class="card-header">
-        <h3>User Profile</h3>
-      </div>
-      <div class="card-body">
-        <div class="row">
-          <div class="col-md-6">
-            <h5>Account Information</h5>
-            <dl class="row">
-              <dt class="col-sm-4">Username:</dt>
-              <dd class="col-sm-8">{{ user.username }}</dd>
-              
-              <dt class="col-sm-4">Email:</dt>
-              <dd class="col-sm-8">{{ user.email }}</dd>
-              
-              <dt class="col-sm-4">Role:</dt>
-              <dd class="col-sm-8">
+<div class="container-fluid">
+  <div class="row">
+    <!-- Profile Header -->
+    <div class="col-12">
+      <div class="card mb-4">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-auto">
+              <div class="avatar-placeholder" style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: bold;">
+                {{ (user.full_name or user.username)[0].upper() }}
+              </div>
+            </div>
+            <div class="col">
+              <h2 class="mb-1">{{ user.full_name or user.username }}</h2>
+              <p class="text-muted mb-2">{{ user.job_title or 'No job title set' }}</p>
+              <div class="d-flex gap-2">
                 <span class="badge bg-{{ 'primary' if user.role == 'admin' else 'secondary' }}">
                   {{ user.role.title() }}
                 </span>
-              </dd>
-              
-              <dt class="col-sm-4">Member Since:</dt>
-              <dd class="col-sm-8">{{ user.created_at.strftime('%Y-%m-%d') }}</dd>
-            </dl>
-          </div>
-          
-          <div class="col-md-6">
-            <h5>Quick Stats</h5>
-            <div class="row text-center">
-              <div class="col-6">
-                <div class="card bg-light">
-                  <div class="card-body">
-                    <h4 class="text-primary">{{ user.owned_projects.count() }}</h4>
-                    <small>Owned Projects</small>
-                  </div>
-                </div>
-              </div>
-              <div class="col-6">
-                <div class="card bg-light">
-                  <div class="card-body">
-                    <h4 class="text-info">{{ user.projects.count() }}</h4>
-                    <small>Member Projects</small>
-                  </div>
-                </div>
+                {% if user.department %}
+                  <span class="badge bg-info">{{ user.department }}</span>
+                {% endif %}
               </div>
             </div>
-            
-            <div class="row text-center mt-3">
-              <div class="col-6">
-                <div class="card bg-light">
-                  <div class="card-body">
-                    <h4 class="text-warning">{{ user.tasks_created.count() }}</h4>
-                    <small>Created Tasks</small>
-                  </div>
-                </div>
-              </div>
-              <!-- Removed Assigned Tasks card as tasks_assigned is not defined -->
+            <div class="col-auto">
+              <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                <i class="fas fa-edit"></i> Edit Profile
+              </button>
             </div>
           </div>
-        </div>
-        
-        <div class="mt-4">
-          <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary">Go to Dashboard</a>
-          <a href="{{ url_for('projects.list_projects') }}" class="btn btn-secondary">View Projects</a>
         </div>
       </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-lg-8">
+      <!-- About Section -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="fas fa-user"></i> About</h5>
+        </div>
+        <div class="card-body">
+          {% if user.bio %}
+            <p class="mb-3">{{ user.bio }}</p>
+          {% else %}
+            <p class="text-muted mb-3">No bio added yet.</p>
+          {% endif %}
+          
+          <div class="row">
+            {% if user.job_title %}
+            <div class="col-md-6 mb-2">
+              <strong>Job Title:</strong><br>
+              <span class="text-muted">{{ user.job_title }}</span>
+            </div>
+            {% endif %}
+            
+            {% if user.department %}
+            <div class="col-md-6 mb-2">
+              <strong>Department:</strong><br>
+              <span class="text-muted">{{ user.department }}</span>
+            </div>
+            {% endif %}
+            
+            {% if user.organization %}
+            <div class="col-md-6 mb-2">
+              <strong>Organization:</strong><br>
+              <span class="text-muted">{{ user.organization }}</span>
+            </div>
+            {% endif %}
+            
+            {% if user.location %}
+            <div class="col-md-6 mb-2">
+              <strong>Location:</strong><br>
+              <span class="text-muted">{{ user.location }}</span>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Worked On Section -->
+      <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0"><i class="fas fa-briefcase"></i> Worked On</h5>
+          <a href="{{ url_for('projects.list_projects') }}" class="btn btn-sm btn-outline-primary">View all</a>
+        </div>
+        <div class="card-body">
+          <p class="text-muted small mb-3">Others will only see what they can access.</p>
+          
+          {% if user.tasks_created.count() > 0 %}
+            <div class="list-group list-group-flush">
+              {% for task in user.tasks_created.limit(5).all() %}
+              <div class="list-group-item border-0 px-0">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <h6 class="mb-1">{{ task.title }}</h6>
+                    <p class="text-muted small mb-1">{{ task.project.name }}</p>
+                    <span class="badge bg-{{ 'success' if task.status == 'completed' else 'warning' if task.status == 'in_progress' else 'secondary' }}">
+                      {{ task.status.replace('_', ' ').title() }}
+                    </span>
+                  </div>
+                  <small class="text-muted">{{ task.created_at.strftime('%b %d') }}</small>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-muted">No tasks created yet.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Places You Work In -->
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="fas fa-building"></i> Places You Work In</h5>
+        </div>
+        <div class="card-body">
+          {% if user.owned_projects.count() > 0 or user.projects.count() > 0 %}
+            <div class="row">
+              {% for project in user.owned_projects.limit(3).all() %}
+              <div class="col-md-6 mb-3">
+                <div class="card border">
+                  <div class="card-body">
+                    <h6 class="card-title">{{ project.name }}</h6>
+                    <p class="card-text text-muted small">{{ project.description[:100] }}{% if project.description|length > 100 %}...{% endif %}</p>
+                    <span class="badge bg-primary">Owner</span>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+              
+              {% for project in user.projects.limit(3).all() %}
+              <div class="col-md-6 mb-3">
+                <div class="card border">
+                  <div class="card-body">
+                    <h6 class="card-title">{{ project.name }}</h6>
+                    <p class="card-text text-muted small">{{ project.description[:100] }}{% if project.description|length > 100 %}...{% endif %}</p>
+                    <span class="badge bg-secondary">Member</span>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-muted">No projects yet.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+      <!-- Contact Information -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="fas fa-envelope"></i> Contact</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <strong>Email:</strong><br>
+            <a href="mailto:{{ user.email }}" class="text-decoration-none">{{ user.email }}</a>
+          </div>
+          <div class="mb-3">
+            <strong>Username:</strong><br>
+            <span class="text-muted">@{{ user.username }}</span>
+          </div>
+          <div class="mb-3">
+            <strong>Member Since:</strong><br>
+            <span class="text-muted">{{ user.created_at.strftime('%B %Y') }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Activity</h5>
+        </div>
+        <div class="card-body">
+          <div class="row text-center">
+            <div class="col-6 mb-3">
+              <div class="border rounded p-3">
+                <h4 class="text-primary mb-1">{{ user.owned_projects.count() }}</h4>
+                <small class="text-muted">Owned Projects</small>
+              </div>
+            </div>
+            <div class="col-6 mb-3">
+              <div class="border rounded p-3">
+                <h4 class="text-info mb-1">{{ user.projects.count() }}</h4>
+                <small class="text-muted">Member Projects</small>
+              </div>
+            </div>
+            <div class="col-6 mb-3">
+              <div class="border rounded p-3">
+                <h4 class="text-warning mb-1">{{ user.tasks_created.count() }}</h4>
+                <small class="text-muted">Created Tasks</small>
+              </div>
+            </div>
+            <div class="col-6 mb-3">
+              <div class="border rounded p-3">
+                <h4 class="text-success mb-1">{{ user.assigned_tasks.count() }}</h4>
+                <small class="text-muted">Assigned Tasks</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="fas fa-cogs"></i> Quick Actions</h5>
+        </div>
+        <div class="card-body">
+          <div class="d-grid gap-2">
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary">
+              <i class="fas fa-tachometer-alt"></i> Dashboard
+            </a>
+            <a href="{{ url_for('projects.list_projects') }}" class="btn btn-outline-primary">
+              <i class="fas fa-project-diagram"></i> View Projects
+            </a>
+            <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#createProjectModal">
+              <i class="fas fa-plus"></i> Create Project
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('auth.update_profile') }}">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editProfileModalLabel">Edit Profile</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Full Name</label>
+              <input type="text" class="form-control" name="full_name" value="{{ user.full_name or '' }}">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Job Title</label>
+              <input type="text" class="form-control" name="job_title" value="{{ user.job_title or '' }}">
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Department</label>
+              <input type="text" class="form-control" name="department" value="{{ user.department or '' }}">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Organization</label>
+              <input type="text" class="form-control" name="organization" value="{{ user.organization or '' }}">
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Location</label>
+              <input type="text" class="form-control" name="location" value="{{ user.location or '' }}">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Avatar URL</label>
+              <input type="url" class="form-control" name="avatar_url" value="{{ user.avatar_url or '' }}">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Bio</label>
+            <textarea class="form-control" name="bio" rows="3">{{ user.bio or '' }}</textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Create Project Modal -->
+<div class="modal fade" id="createProjectModal" tabindex="-1" aria-labelledby="createProjectModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('projects.create') }}">
+        <div class="modal-header">
+          <h5 class="modal-title" id="createProjectModalLabel">Create New Project</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Project Name</label>
+            <input type="text" class="form-control" name="name" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea class="form-control" name="description" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Project</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>

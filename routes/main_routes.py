@@ -4,6 +4,7 @@ from flask import Blueprint, render_template, abort
 from flask_login import login_required, current_user
 from models.project import Project
 from models.task import Task
+from utils.decorators import user_required
 
 main_bp = Blueprint("main", __name__)
 
@@ -14,6 +15,7 @@ def index():
 
 @main_bp.route("/dashboard")
 @login_required
+@user_required
 def dashboard():
     # Show counts of projects and tasks
     owned = current_user.owned_projects.count()
@@ -52,6 +54,7 @@ def dashboard():
 
 @main_bp.route("/projects/<int:proj_id>/kanban")
 @login_required
+@user_required
 def kanban_board(proj_id):
     project = Project.query.get_or_404(proj_id)
 
@@ -81,5 +84,6 @@ def kanban_board(proj_id):
 
 @main_bp.route("/profile")
 @login_required
+@user_required
 def profile():
     return render_template("profile.html", user=current_user)

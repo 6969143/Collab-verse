@@ -75,9 +75,11 @@
         {% if current_user.id == project.owner_id %}
           <form method="POST" action="{{ url_for('projects.add_member', proj_id=project.id) }}" class="mt-3">
             <div class="input-group">
-              <input type="email" class="form-control" name="email" placeholder="Member email" required>
+              <input type="text" class="form-control" name="user_identifier" 
+                     placeholder="Email or username" required>
               <button type="submit" class="btn btn-outline-primary">Add Member</button>
             </div>
+            <div class="form-text small">Enter user's email address or username</div>
           </form>
         {% endif %}
       </div>

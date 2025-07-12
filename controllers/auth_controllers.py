@@ -5,15 +5,25 @@ from models.user import User
 from models import db
 from utils.jwt_utils import generate_token
 
-def register_user(username, email, password, role="member"):
-    # ensure unique username/email
-    exists = User.query.filter(
-        (User.username == username) | (User.email == email)
-    ).first()
+def register_user(full_name, email, password, username, role="user"):
+    # ensure unique email
+    exists = User.query.filter_by(email=email).first()
     if exists:
-        return None, "Username or email already taken"
+        return None, "Email already taken"
+    
+    # ensure username is unique
+    username_exists = User.query.filter_by(username=username).first()
+    if username_exists:
+        return None, "Username already taken"
+    
     pwd_hash = generate_password_hash(password)
-    user = User(username=username, email=email, password_hash=pwd_hash, role=role)
+    user = User()
+    user.full_name = full_name
+    user.email = email
+    user.password_hash = pwd_hash
+    user.username = username
+    user.role = role
+    
     db.session.add(user)
     db.session.commit()
     return user, None
