@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.name }} - Kanban Board{% endblock %}
+
+{% block head %}
+<style>
+.kanban-column {
+  min-height: 400px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+}
+.task-card {
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+.task-card:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2>{{ project.name }} - Kanban Board</h2>
+  <a href="{{ url_for('projects.detail', proj_id=project.id) }}" class="btn btn-secondary">
+    Back to Project
+  </a>
+</div>
+
+<div class="row">
+  <div class="col-md-4">
+    <div class="kanban-column" data-status="todo">
+      <h5 class="text-primary mb-3">To Do</h5>
+      {% for task in todo %}
+        <div class="card task-card" data-task-id="{{ task.id }}">
+          <div class="card-body">
+            <h6 class="card-title">{{ task.title }}</h6>
+            {% if task.description %}
+              <p class="card-text small">{{ task.description[:100] }}{% if task.description|length > 100 %}...{% endif %}</p>
+            {% endif %}
+            {% if task.due_date %}
+              <small class="text-muted">Due: {{ task.due_date.strftime('%Y-%m-%d') }}</small>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="kanban-column" data-status="in_progress">
+      <h5 class="text-warning mb-3">In Progress</h5>
+      {% for task in in_progress %}
+        <div class="card task-card" data-task-id="{{ task.id }}">
+          <div class="card-body">
+            <h6 class="card-title">{{ task.title }}</h6>
+            {% if task.description %}
+              <p class="card-text small">{{ task.description[:100] }}{% if task.description|length > 100 %}...{% endif %}</p>
+            {% endif %}
+            {% if task.due_date %}
+              <small class="text-muted">Due: {{ task.due_date.strftime('%Y-%m-%d') }}</small>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="kanban-column" data-status="completed">
+      <h5 class="text-success mb-3">Completed</h5>
+      {% for task in completed %}
+        <div class="card task-card" data-task-id="{{ task.id }}">
+          <div class="card-body">
+            <h6 class="card-title">{{ task.title }}</h6>
+            {% if task.description %}
+              <p class="card-text small">{{ task.description[:100] }}{% if task.description|length > 100 %}...{% endif %}</p>
+            {% endif %}
+            <small class="text-muted">Completed</small>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+{% if is_project_owner %}
+<!-- Add New Task Form -->
+<div class="card mt-4">
+  <div class="card-header">
+    <h5>Add New Task</h5>
+  </div>
+  <div class="card-body">
+    <form method="POST" action="{{ url_for('tasks.create', project_id=project.id) }}">
+      <div class="row">
+        <div class="col-md-4">
+          <input type="text" class="form-control" name="title" placeholder="Task title" required>
+        </div>
+        <div class="col-md-4">
+          <textarea class="form-control" name="description" placeholder="Description (optional)" rows="1"></textarea>
+        </div>
+        <div class="col-md-2">
+          <input type="date" class="form-control" name="due_date">
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-primary w-100">Add Task</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% else %}
+<!-- View Only Notice -->
+<div class="alert alert-info mt-4">
+  <i class="bi bi-info-circle"></i>
+  <strong>View Only:</strong> You are a member of this project. Only project owners can create tasks.
+</div>
+{% endif %}
+{% endblock %} 

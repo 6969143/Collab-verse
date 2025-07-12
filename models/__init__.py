@@ -7,3 +7,4 @@ from .user import User
 from .project import Project
 from .task import Task
 from .task_member import TaskMember
+from .ticket import Ticket

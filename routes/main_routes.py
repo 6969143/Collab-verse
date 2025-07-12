@@ -31,6 +31,10 @@ def dashboard():
                  Task.status == "completed"
              ).count()
 
+    # Get user's projects
+    owned_projects = current_user.owned_projects.all()
+    shared_projects = current_user.projects.all()
+
     return render_template(
         "dashboard.html",
         stats={
@@ -39,7 +43,10 @@ def dashboard():
             "todo": todo,
             "in_progress": in_prog,
             "completed": done
-        }
+        },
+        owned_projects=owned_projects,
+        shared_projects=shared_projects,
+        is_admin=current_user.role == 'admin'
     )
 
 
@@ -59,12 +66,16 @@ def kanban_board(proj_id):
     for t in tasks:
         cols[t.status].append(t)
 
+    # Check if user is project owner (can create tasks)
+    is_project_owner = current_user.id == project.owner_id
+
     return render_template(
         "task_management.html",
         project=project,
         todo=cols["todo"],
         in_progress=cols["in_progress"],
-        completed=cols["completed"]
+        completed=cols["completed"],
+        is_project_owner=is_project_owner
     )
 
 

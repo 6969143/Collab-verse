@@ -43,7 +43,7 @@ class Project(db.Model):
         lazy='dynamic',
         cascade='all, delete-orphan'
     )
-    Tickets = db.relationship(
+    tickets = db.relationship(
         'Ticket',
         back_populates='project',
         lazy='dynamic',

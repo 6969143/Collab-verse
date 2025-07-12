@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - Project Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header">
+        <h3>User Profile</h3>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <h5>Account Information</h5>
+            <dl class="row">
+              <dt class="col-sm-4">Username:</dt>
+              <dd class="col-sm-8">{{ user.username }}</dd>
+              
+              <dt class="col-sm-4">Email:</dt>
+              <dd class="col-sm-8">{{ user.email }}</dd>
+              
+              <dt class="col-sm-4">Role:</dt>
+              <dd class="col-sm-8">
+                <span class="badge bg-{{ 'primary' if user.role == 'admin' else 'secondary' }}">
+                  {{ user.role.title() }}
+                </span>
+              </dd>
+              
+              <dt class="col-sm-4">Member Since:</dt>
+              <dd class="col-sm-8">{{ user.created_at.strftime('%Y-%m-%d') }}</dd>
+            </dl>
+          </div>
+          
+          <div class="col-md-6">
+            <h5>Quick Stats</h5>
+            <div class="row text-center">
+              <div class="col-6">
+                <div class="card bg-light">
+                  <div class="card-body">
+                    <h4 class="text-primary">{{ user.owned_projects.count() }}</h4>
+                    <small>Owned Projects</small>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="card bg-light">
+                  <div class="card-body">
+                    <h4 class="text-info">{{ user.projects.count() }}</h4>
+                    <small>Member Projects</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row text-center mt-3">
+              <div class="col-6">
+                <div class="card bg-light">
+                  <div class="card-body">
+                    <h4 class="text-warning">{{ user.tasks_created.count() }}</h4>
+                    <small>Created Tasks</small>
+                  </div>
+                </div>
+              </div>
+              <!-- Removed Assigned Tasks card as tasks_assigned is not defined -->
+            </div>
+          </div>
+        </div>
+        
+        <div class="mt-4">
+          <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary">Go to Dashboard</a>
+          <a href="{{ url_for('projects.list_projects') }}" class="btn btn-secondary">View Projects</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 

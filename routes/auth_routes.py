@@ -10,7 +10,8 @@ def register():
         username = request.form["username"]
         email    = request.form["email"]
         password = request.form["password"]
-        user, err = register_user(username, email, password)
+        # Register as regular user by default
+        user, err = register_user(username, email, password, role="user")
         if err:
             flash(err, "danger")
             return redirect(url_for("auth.register"))
@@ -29,7 +30,7 @@ def login():
             return redirect(url_for("auth.login"))
 
         # set JWT cookie and redirect
-        resp = make_response(redirect(url_for("main.kanban_board")))
+        resp = make_response(redirect(url_for("main.dashboard")))
         resp.set_cookie(
             key="access_token_cookie",
             value=token,

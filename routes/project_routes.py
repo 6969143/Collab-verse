@@ -1,5 +1,3 @@
-# routes/project_routes.py
-
 from flask import Blueprint, render_template, request, redirect, url_for, flash, abort
 from flask_login import login_required, current_user
 from controllers.project_controllers import (
@@ -15,9 +13,7 @@ project_bp = Blueprint("projects", __name__)
 @project_bp.route("/create", methods=["GET", "POST"])
 @login_required
 def create():
-    if current_user.role != "admin":
-        abort(403)
-
+    # Allow both admin and regular users to create projects
     if request.method == "POST":
         name = request.form["name"]
         desc = request.form.get("description")
@@ -32,10 +28,18 @@ def create():
 @login_required
 def list_projects():
     pkgs = get_user_projects(current_user)
+    stats = {
+        "owned_projects": len(pkgs["owned"]),
+        "member_projects": len(pkgs["shared"]),
+        "todo": 0,
+        "in_progress": 0,
+        "completed": 0
+    }
     return render_template(
         "dashboard.html", 
         owned=pkgs["owned"], 
-        shared=pkgs["shared"]
+        shared=pkgs["shared"],
+        stats=stats
     )
 
 
@@ -55,14 +59,17 @@ def detail(proj_id):
 @login_required
 def add_member(proj_id):
     proj = get_project(proj_id)
+    if not proj:
+        abort(404)
     if current_user.id != proj.owner_id:
         abort(403)
     email = request.form["email"]
-    user, err = add_member_to_project(proj, email)
+    user, err = add_member_to_project(proj, email, inviter=current_user)
     if err:
         flash(err, "danger")
     else:
-        flash(f"{user.email} added.", "success")
+        if user:
+            flash(f"{user.email} added and invitation sent.", "success")
     return redirect(url_for("projects.detail", proj_id=proj_id))
 
 
@@ -70,6 +77,8 @@ def add_member(proj_id):
 @login_required
 def close(proj_id):
     proj = get_project(proj_id)
+    if not proj:
+        abort(404)
     if current_user.id != proj.owner_id:
         abort(403)
     close_project(proj)

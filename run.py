@@ -2,7 +2,9 @@ from flask import Flask
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_jwt_extended import JWTManager
+from flask_mail import Mail
 from routes.ticket_routes import ticket_bp
+from routes.admin_routes import admin_bp
 from config import Config
 from models import db
 from routes.auth_routes import auth_bp
@@ -18,9 +20,12 @@ def create_app():
 
     db.init_app(app)
     Migrate(app, db)
+    
+    # Initialize Flask-Mail
+    mail = Mail(app)
 
     login_manager = LoginManager(app)
-    login_manager.login_view = "auth.login"
+    login_manager.login_view = "auth.login"  # type: ignore[attr-defined]  
     login_manager.session_protection = "strong"
 
     @login_manager.user_loader
@@ -35,7 +40,10 @@ def create_app():
     app.register_blueprint(project_bp, url_prefix="/projects")
     app.register_blueprint(task_bp,    url_prefix="/tasks")
     app.register_blueprint(main_bp)  
-    app.register_blueprint(ticket_bp, url_prefix="/projects")
+    # Register tickets blueprint under /tickets to avoid conflict with /projects
+    app.register_blueprint(ticket_bp, url_prefix="/tickets")
+    # Register admin blueprint
+    app.register_blueprint(admin_bp, url_prefix="/admin")
 
     return app
 

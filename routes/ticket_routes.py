@@ -7,7 +7,7 @@ from controllers.ticket_controllers import open_ticket, review_ticket
 
 ticket_bp = Blueprint("tickets", __name__, template_folder="../templates")
 
-@ticket_bp.route("/<int:proj_id>/tickets", methods=["GET", "POST"])
+@ticket_bp.route("/<int:proj_id>", methods=["GET", "POST"])
 @login_required
 def tickets(proj_id):
     project = Project.query.get_or_404(proj_id)
@@ -36,8 +36,8 @@ def review(ticket_id):
     ticket, err = review_ticket(ticket_id, accept, current_user)
     if err:
         flash(err, "danger")
-    else:
+        return redirect(request.referrer or url_for("main.index"))
+    if ticket:
         flash(f"Ticket {ticket.status}.", "info")
-    return redirect(
-      url_for("tickets.tickets", proj_id=ticket.project_id)
-    )
+        return redirect(url_for("tickets.tickets", proj_id=ticket.project_id))
+    return redirect(url_for("main.index"))
