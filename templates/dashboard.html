@@ -4,9 +4,11 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
   <h2>Dashboard {% if is_admin %}<span class="badge bg-danger">Admin</span>{% endif %}</h2>
-  {% if owned_projects|length > 0 %}
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createTaskModal">Create Task</button>
-  {% endif %}
+  <div>
+    {% if owned_projects|length > 0 %}
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createTaskModal">Create Task</button>
+    {% endif %}
+  </div>
 </div>
 
 <!-- Create Task Modal -->
@@ -178,9 +180,20 @@
     <h5>Owned Projects (Project Admin)</h5>
     <ul class="list-group">
       {% for p in owned_projects %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          <a href="{{ url_for('projects.detail', proj_id=p.id) }}">{{ p.name }}</a>
-          <span class="badge bg-primary">Owner</span>
+        <li class="list-group-item">
+          <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1">
+              <a href="{{ url_for('projects.detail', proj_id=p.id) }}">{{ p.name }}</a>
+              {% if p.labels.all() %}
+              <div class="mt-1">
+                {% for label in p.labels %}
+                <span class="badge bg-primary me-1">{{ label.name }}</span>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+            <span class="badge bg-primary">Owner</span>
+          </div>
         </li>
       {% else %}
         <li class="list-group-item text-muted">No owned projects</li>
@@ -191,9 +204,20 @@
     <h5>Shared Projects (Member)</h5>
     <ul class="list-group">
       {% for p in shared_projects %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          <a href="{{ url_for('projects.detail', proj_id=p.id) }}">{{ p.name }}</a>
-          <span class="badge bg-secondary">Member</span>
+        <li class="list-group-item">
+          <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1">
+              <a href="{{ url_for('projects.detail', proj_id=p.id) }}">{{ p.name }}</a>
+              {% if p.labels.all() %}
+              <div class="mt-1">
+                {% for label in p.labels %}
+                <span class="badge bg-primary me-1">{{ label.name }}</span>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+            <span class="badge bg-secondary">Member</span>
+          </div>
         </li>
       {% else %}
         <li class="list-group-item text-muted">No shared projects</li>

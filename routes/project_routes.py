@@ -5,7 +5,12 @@ from controllers.project_controllers import (
     get_user_projects, 
     get_project, 
     add_member_to_project,
-    close_project
+    close_project,
+    search_projects_by_labels,
+    search_projects_enhanced,
+    get_all_labels,
+    get_popular_labels,
+    apply_for_project
 )
 
 project_bp = Blueprint("projects", __name__)
@@ -17,7 +22,8 @@ def create():
     if request.method == "POST":
         name = request.form["name"]
         desc = request.form.get("description")
-        proj = create_project(current_user, name, desc)
+        labels = request.form.get("labels")
+        proj = create_project(current_user, name, desc, labels)
         flash(f"Project '{proj.name}' created.", "success")
         return redirect(url_for("projects.detail", proj_id=proj.id))
 
@@ -43,16 +49,68 @@ def list_projects():
     )
 
 
+@project_bp.route("/search")
+@login_required
+def search_projects():
+    """Enhanced search projects by labels, names, descriptions, or owners"""
+    search_query = request.args.get('labels', '').strip()
+    projects = []
+    error_message = None
+    try:
+        if not search_query:
+            # Show all open projects if no search query
+            projects = search_projects_enhanced("", current_user)
+            search_query = ""
+        else:
+            projects = search_projects_enhanced(search_query, current_user)
+    except Exception as e:
+        # Log the error and show a user-friendly message on the search page
+        print(f"Search error: {e}")
+        error_message = "No records found. (Database or search error)"
+    popular_labels = get_popular_labels(5)
+    return render_template(
+        "project_search.html",
+        projects=projects,
+        search_labels=search_query,
+        popular_labels=popular_labels,
+        error_message=error_message
+    )
+
+
 @project_bp.route("/<int:proj_id>")
 @login_required
 def detail(proj_id):
     proj = get_project(proj_id)
     if not proj:
         abort(404)
-    if current_user.id != proj.owner_id and \
-       not proj.members.filter_by(id=current_user.id).first():
-        abort(403)
-    return render_template("project_detail.html", project=proj)
+    
+    # Allow viewing of all open projects, but restrict certain actions
+    is_owner = current_user.id == proj.owner_id
+    is_member = proj.members.filter_by(id=current_user.id).first() is not None
+    
+    return render_template("project_detail.html", project=proj, is_owner=is_owner, is_member=is_member)
+
+
+@project_bp.route("/<int:proj_id>/apply", methods=["GET", "POST"])
+@login_required
+def apply(proj_id):
+    """Apply for a project"""
+    project = get_project(proj_id)
+    if not project:
+        abort(404)
+    
+    if request.method == "POST":
+        message = request.form.get("message", "").strip()
+        result, error = apply_for_project(proj_id, current_user, message)
+        
+        if error:
+            flash(error, "danger")
+        else:
+            flash("Application sent successfully! The project owner will be notified.", "success")
+        
+        return redirect(url_for("projects.detail", proj_id=proj_id))
+    
+    return render_template("project_apply.html", project=project)
 
 
 @project_bp.route("/<int:proj_id>/add_member", methods=["POST"])
