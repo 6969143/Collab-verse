@@ -28,6 +28,10 @@ def dashboard():
                  Project.members.any(id=current_user.id),
                  Task.status == "in_progress"
              ).count()
+    testing = Task.query.join(Project).filter(
+                 Project.members.any(id=current_user.id),
+                 Task.status == "testing"
+             ).count()
     done    = Task.query.join(Project).filter(
                  Project.members.any(id=current_user.id),
                  Task.status == "completed"
@@ -44,6 +48,7 @@ def dashboard():
             "member_projects": member,
             "todo": todo,
             "in_progress": in_prog,
+            "testing": testing,
             "completed": done
         },
         owned_projects=owned_projects,
@@ -65,9 +70,10 @@ def kanban_board(proj_id):
 
     # Group tasks by status
     tasks = Task.query.filter_by(project_id=proj_id).all()
-    cols = {"todo": [], "in_progress": [], "completed": []}
+    cols = {"todo": [], "in_progress": [], "testing": [], "completed": []}
     for t in tasks:
-        cols[t.status].append(t)
+        if t.status in cols:
+            cols[t.status].append(t)
 
     # Check if user is project owner (can create tasks)
     is_project_owner = current_user.id == project.owner_id
@@ -77,6 +83,7 @@ def kanban_board(proj_id):
         project=project,
         todo=cols["todo"],
         in_progress=cols["in_progress"],
+        testing=cols["testing"],
         completed=cols["completed"],
         is_project_owner=is_project_owner
     )

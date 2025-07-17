@@ -1,5 +1,7 @@
 """add profile fields to user
 
+NOTE: The task_status enum change for 'testing' is handled in a new migration.
+
 Revision ID: add_profile_fields
 Revises: 4f5fa421dbc5
 Create Date: 2025-01-12 11:00:00.000000

@@ -1,5 +1,7 @@
 """Initial migration
 
+NOTE: The task_status enum change for 'testing' is handled in a new migration.
+
 Revision ID: 774d11bf0701
 Revises: 
 Create Date: 2025-07-11 10:58:04.822773

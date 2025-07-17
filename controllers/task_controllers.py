@@ -41,7 +41,7 @@ def update_task_status(task_id, new_status, user):
     if user.id != project.owner_id and \
        not task.members.filter_by(id=user.id).first():
         return None, "Permission denied"
-    if new_status not in ("todo", "in_progress", "completed"):
+    if new_status not in ("todo", "in_progress", "testing", "completed"):
         return None, "Invalid status"
 
     task.status = new_status

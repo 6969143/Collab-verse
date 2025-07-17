@@ -1,5 +1,7 @@
 """Add missing columns to task table
 
+NOTE: The task_status enum change for 'testing' is handled in a new migration.
+
 Revision ID: 4f5fa421dbc5
 Revises: 774d11bf0701
 Create Date: 2025-07-12 13:07:48.010039

@@ -1,8 +1,6 @@
 from datetime import datetime
 from . import db
 
-
-
 class Task(db.Model):
     __tablename__ = 'task'
 
@@ -10,7 +8,7 @@ class Task(db.Model):
     title = db.Column(db.String(150), nullable=False)
     description = db.Column(db.Text)
     status = db.Column(
-        db.Enum('todo', 'in_progress', 'completed', 'blocked', 'review', name='task_status'),
+        db.Enum('todo', 'in_progress', 'testing', 'completed', 'blocked', 'review', name='task_status'),
         default='todo',
         nullable=False
     )

@@ -1,5 +1,7 @@
 """add labels to projects
 
+NOTE: The task_status enum change for 'testing' is handled in a new migration.
+
 Revision ID: add_labels_to_projects
 Revises: 4f5fa421dbc5
 Create Date: 2024-01-01 12:00:00.000000

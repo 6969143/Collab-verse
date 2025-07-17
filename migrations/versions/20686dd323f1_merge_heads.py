@@ -1,5 +1,7 @@
 """merge heads
 
+NOTE: The task_status enum change for 'testing' is handled in a new migration.
+
 Revision ID: 20686dd323f1
 Revises: add_labels_to_projects, add_profile_fields
 Create Date: 2025-07-13 16:05:44.895153

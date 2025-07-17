@@ -11,9 +11,9 @@
       <div class="card-body">
         <form method="post" action="{{ url_for('auth.login') }}" id="loginForm">
           <div class="mb-3">
-            <label class="form-label">Email Address *</label>
-            <input name="email" type="email" class="form-control" required 
-                   placeholder="Enter your email address">
+            <label class="form-label">Email or Username *</label>
+            <input name="identifier" type="text" class="form-control" required 
+                   placeholder="Enter your email address or username">
           </div>
           
           <div class="mb-3">

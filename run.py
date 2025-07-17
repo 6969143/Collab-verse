@@ -21,7 +21,6 @@ def create_app():
     db.init_app(app)
     Migrate(app, db)
     
-    # Initialize Flask-Mail
     mail = Mail(app)
     app.extensions['mail'] = mail
 
@@ -34,7 +33,6 @@ def create_app():
         from models.user import User
         return User.query.get(int(user_id))
 
-    # JWT
     JWTManager(app)
 
     app.register_blueprint(auth_bp,    url_prefix="/auth")
@@ -49,4 +47,18 @@ def create_app():
     return app
 
 if __name__ == "__main__":
-    create_app().run(debug=True)
+    import sys
+    app = create_app()
+    if len(sys.argv) == 3 and sys.argv[1] == '--make-admin':
+        email = sys.argv[2]
+        with app.app_context():
+            from models.user import User
+            user = User.query.filter_by(email=email).first()
+            if user:
+                user.role = 'admin'
+                db.session.commit()
+                print(f"User {email} set as admin.")
+            else:
+                print(f"User with email {email} not found.")
+    else:
+        app.run(debug=True)

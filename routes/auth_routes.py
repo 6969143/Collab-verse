@@ -10,7 +10,6 @@ from datetime import datetime, timedelta
 
 auth_bp = Blueprint("auth", __name__)
 
-# Store reset tokens temporarily (in production, use Redis or database)
 password_reset_tokens = {}
 
 @auth_bp.route("/register", methods=["GET", "POST"])
@@ -19,11 +18,9 @@ def register():
         full_name = request.form.get("full_name", "").strip()
         email = request.form.get("email", "").strip()
         username = request.form.get("username", "").strip()
-        role = request.form.get("role", "").strip()
         password = request.form.get("password", "")
         confirm_password = request.form.get("confirm_password", "")
         
-        # Validation
         if not full_name:
             flash("Full name is required.", "danger")
             return redirect(url_for("auth.register"))
@@ -36,14 +33,6 @@ def register():
             flash("Username is required.", "danger")
             return redirect(url_for("auth.register"))
         
-        if not role:
-            flash("Role is required.", "danger")
-            return redirect(url_for("auth.register"))
-        
-        if role not in ["user", "admin"]:
-            flash("Invalid role selected.", "danger")
-            return redirect(url_for("auth.register"))
-        
         if password != confirm_password:
             flash("Passwords do not match.", "danger")
             return redirect(url_for("auth.register"))
@@ -52,13 +41,12 @@ def register():
             flash("Password must be at least 8 characters long.", "danger")
             return redirect(url_for("auth.register"))
         
-        # Register user with selected role
-        user, err = register_user(full_name, email, password, username, role=role)
+        user, err = register_user(full_name, email, password, username)
         if err:
             flash(err, "danger")
             return redirect(url_for("auth.register"))
         
-        flash(f"Registered successfully as {role.title()}. Please log in.", "success")
+        flash(f"Registered successfully as User. Please log in.", "success")
         return redirect(url_for("auth.login"))
     
     return render_template("register.html")
@@ -66,9 +54,9 @@ def register():
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        email    = request.form["email"]
+        identifier = request.form["identifier"]
         password = request.form["password"]
-        user, token = authenticate_user(email, password)
+        user, token = authenticate_user(identifier, password)
         if not user:
             flash(token, "danger")
             return redirect(url_for("auth.login"))

@@ -29,15 +29,6 @@
           </div>
           
           <div class="mb-3">
-            <label class="form-label">Role *</label>
-            <select name="role" class="form-select" required>
-              <option value="">Select your role</option>
-              <option value="user">User</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-          
-          <div class="mb-3">
             <label class="form-label">Password *</label>
             <input name="password" type="password" class="form-control" required 
                    placeholder="Create a secure password" id="password">
@@ -68,7 +59,6 @@
 document.getElementById('registerForm').addEventListener('submit', function(e) {
   const password = document.getElementById('password').value;
   const confirmPassword = document.getElementById('confirmPassword').value;
-  const role = document.querySelector('select[name="role"]').value;
   const username = document.querySelector('input[name="username"]').value;
   
   if (password !== confirmPassword) {
@@ -80,12 +70,6 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
   if (password.length < 8) {
     e.preventDefault();
     alert('Password must be at least 8 characters long.');
-    return false;
-  }
-  
-  if (!role) {
-    e.preventDefault();
-    alert('Please select a role.');
     return false;
   }
   

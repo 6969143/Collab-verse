@@ -29,7 +29,7 @@
 </div>
 
 <div class="row">
-  <div class="col-md-4">
+  <div class="col-md-3">
     <div class="kanban-column" data-status="todo">
       <h5 class="text-primary mb-3">To Do</h5>
       {% for task in todo %}
@@ -48,7 +48,7 @@
     </div>
   </div>
 
-  <div class="col-md-4">
+  <div class="col-md-3">
     <div class="kanban-column" data-status="in_progress">
       <h5 class="text-warning mb-3">In Progress</h5>
       {% for task in in_progress %}
@@ -67,7 +67,26 @@
     </div>
   </div>
 
-  <div class="col-md-4">
+  <div class="col-md-3">
+    <div class="kanban-column" data-status="testing">
+      <h5 class="text-info mb-3">Testing</h5>
+      {% for task in testing %}
+        <div class="card task-card" data-task-id="{{ task.id }}">
+          <div class="card-body">
+            <h6 class="card-title">{{ task.title }}</h6>
+            {% if task.description %}
+              <p class="card-text small">{{ task.description[:100] }}{% if task.description|length > 100 %}...{% endif %}</p>
+            {% endif %}
+            {% if task.due_date %}
+              <small class="text-muted">Due: {{ task.due_date.strftime('%Y-%m-%d') }}</small>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="col-md-3">
     <div class="kanban-column" data-status="completed">
       <h5 class="text-success mb-3">Completed</h5>
       {% for task in completed %}

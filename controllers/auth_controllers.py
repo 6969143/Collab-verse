@@ -5,7 +5,7 @@ from models.user import User
 from models import db
 from utils.jwt_utils import generate_token
 
-def register_user(full_name, email, password, username, role="user"):
+def register_user(full_name, email, password, username):
     # ensure unique email
     exists = User.query.filter_by(email=email).first()
     if exists:
@@ -22,20 +22,19 @@ def register_user(full_name, email, password, username, role="user"):
     user.email = email
     user.password_hash = pwd_hash
     user.username = username
-    user.role = role
+    user.role = 'user'
     
     db.session.add(user)
     db.session.commit()
     return user, None
 
-def authenticate_user(email, password):
-    user = User.query.filter_by(email=email).first()
+def authenticate_user(identifier, password):
+    user = User.query.filter((User.email == identifier) | (User.username == identifier)).first()
     if not user or not check_password_hash(user.password_hash, password):
         return None, "Invalid credentials"
     # log in via Flask-Login
     login_user(user)
 
-    # issue JWT
     token = generate_token(identity=user.id)
     return user, token
 
