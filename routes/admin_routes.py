@@ -4,6 +4,8 @@ from models.user import User
 from models.project import Project
 from models.task import Task
 from models.ticket import Ticket
+from models.notification import Notification
+from models.role_application import RoleApplication
 from models import db
 from utils.decorators import admin_required
 
@@ -81,3 +83,43 @@ def toggle_user_role(user_id):
     db.session.commit()
     flash(f"User {user.username} role changed to {user.role}.", "success")
     return redirect(url_for("admin.user_detail", user_id=user_id)) 
+
+@admin_bp.route('/notifications')
+@login_required
+@admin_required
+def notifications():
+    notifications = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).all()
+    return render_template('admin/notifications.html', notifications=notifications)
+
+@admin_bp.route('/notifications/<int:notif_id>/accept', methods=['POST'])
+@login_required
+@admin_required
+def accept_promotion_request(notif_id):
+    notif = Notification.query.get_or_404(notif_id)
+    # Find the applicant from the message (or extend Notification to store applicant_id)
+    app = RoleApplication.query.filter_by(applicant_id=notif.applicant_id, requested_role='team_manager', status='pending').first()
+    if not app:
+        flash('No pending application found.', 'danger')
+        return redirect(url_for('admin.notifications'))
+    user = app.applicant
+    user.role = 'team_manager'
+    app.status = 'approved'
+    notif.is_read = True
+    db.session.commit()
+    flash(f"{user.username} has been promoted to Team Manager.", 'success')
+    return redirect(url_for('admin.notifications'))
+
+@admin_bp.route('/notifications/<int:notif_id>/reject', methods=['POST'])
+@login_required
+@admin_required
+def reject_promotion_request(notif_id):
+    notif = Notification.query.get_or_404(notif_id)
+    app = RoleApplication.query.filter_by(applicant_id=notif.applicant_id, requested_role='team_manager', status='pending').first()
+    if not app:
+        flash('No pending application found.', 'danger')
+        return redirect(url_for('admin.notifications'))
+    app.status = 'rejected'
+    notif.is_read = True
+    db.session.commit()
+    flash('Promotion request rejected.', 'info')
+    return redirect(url_for('admin.notifications')) 

@@ -37,10 +37,23 @@ def update_task_status(task_id, new_status, user):
     if not task:
         return None, "Task not found"
     project = task.project
-    # Only owner or assigned members can update
-    if user.id != project.owner_id and \
-       not task.members.filter_by(id=user.id).first():
-        return None, "Permission denied"
+    
+    # Check permissions: project owner, team manager, admin, or task assignee can update
+    can_update = False
+    
+    # Project owner can update any task
+    if user.id == project.owner_id:
+        can_update = True
+    # Team managers and admins can update any task
+    elif user.role in ['team_manager', 'admin']:
+        can_update = True
+    # Developers can only update tasks assigned to them
+    elif user.role == 'developer' and task.assignee_id == user.id:
+        can_update = True
+    
+    if not can_update:
+        return None, "Permission denied: You can only update tasks assigned to you"
+    
     if new_status not in ("todo", "in_progress", "testing", "completed"):
         return None, "Invalid status"
 
@@ -82,15 +95,7 @@ def create_task_full(
     status=None,
     assignee=None,
     priority=None,
-    parent=None,
-    labels=None,
-    team=None,
-    start_date=None,
-    reporter=None,
-    attachment=None,
-    linked_work_items=None,
-    restrict_to=None,
-    flagged=False
+    labels=None
 ):
     project = Project.query.get(project_id)
     if not project:
@@ -99,58 +104,30 @@ def create_task_full(
        not project.members.filter_by(id=creator.id).first():
         return None, "Permission denied"
 
-    # Handle assignee lookup
+    # Handle assignee lookup by ID
     assignee_id = None
     if assignee:
-        assignee_user = User.query.filter(
-            (User.username == assignee) | (User.email == assignee)
-        ).first()
-        if assignee_user:
-            assignee_id = assignee_user.id
-
-    # Handle reporter lookup
-    reporter_id = None
-    if reporter:
-        reporter_user = User.query.filter(
-            (User.username == reporter) | (User.email == reporter)
-        ).first()
-        if reporter_user:
-            reporter_id = reporter_user.id
-    else:
-        reporter_id = creator.id
-
-    # Handle parent task lookup
-    parent_id = None
-    if parent:
         try:
-            parent_id = int(parent)
+            assignee_id = int(assignee)
+            # Verify the user exists and is a developer
+            assignee_user = User.query.get(assignee_id)
+            if not assignee_user or assignee_user.role != 'developer':
+                assignee_id = None
         except (ValueError, TypeError):
-            pass
-
-    # Handle attachment (for now, just store filename if provided)
-    attachment_filename = None
-    if attachment and attachment.filename:
-        attachment_filename = attachment.filename
+            assignee_id = None
 
     task = Task()
     task.title = title
-    task.description = description
+    task.description = description or ""  # Use empty string if no description
     task.status = status or 'todo'
     task.due_date = parse_date(due_date)
-    task.start_date = parse_date(start_date)
     task.project_id = project_id
     task.creator_id = creator.id
-    task.reporter_id = reporter_id
-    task.work_type = work_type
+    task.reporter_id = creator.id  # Creator is the reporter
+    task.work_type = work_type or 'Task'
     task.assignee_id = assignee_id
-    task.priority = priority
-    task.parent_id = parent_id
+    task.priority = priority or 'Medium'
     task.labels = labels
-    task.team = team
-    task.flagged = flagged
-    task.restrict_to = restrict_to
-    task.linked_work_items = linked_work_items
-    task.attachment = attachment_filename
     task.created_at = datetime.utcnow()
     
     db.session.add(task)

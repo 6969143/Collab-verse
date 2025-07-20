@@ -3,9 +3,13 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-  <h2>Dashboard {% if is_admin %}<span class="badge bg-danger">Admin</span>{% endif %}</h2>
+  <h2>Dashboard 
+    {% if is_admin %}<span class="badge bg-danger">Admin</span>
+    {% elif is_visitor %}<span class="badge bg-warning">Visitor</span>
+    {% endif %}
+  </h2>
   <div>
-    {% if owned_projects|length > 0 %}
+    {% if not is_visitor and owned_projects|length > 0 %}
       <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createTaskModal">Create Task</button>
     {% endif %}
   </div>
@@ -65,12 +69,15 @@
             <input type="text" class="form-control" name="title" required placeholder="Summary is required">
           </div>
           <div class="mb-3">
-            <label class="form-label">Description</label>
-            <textarea class="form-control" name="description" rows="3"></textarea>
-          </div>
-          <div class="mb-3">
             <label class="form-label">Assignee</label>
-            <input type="text" class="form-control" name="assignee" placeholder="Assign to (username or email)">
+            <select class="form-select" name="assignee">
+              <option value="">Select assignee (optional)</option>
+              {% if current_user.role == 'team_manager' %}
+                {% for member in team_members %}
+                  <option value="{{ member.id }}">{{ member.full_name or member.username }} ({{ member.email }})</option>
+                {% endfor %}
+              {% endif %}
+            </select>
           </div>
           <div class="mb-3">
             <label class="form-label">Priority</label>
@@ -81,44 +88,12 @@
             </select>
           </div>
           <div class="mb-3">
-            <label class="form-label">Parent</label>
-            <input type="text" class="form-control" name="parent" placeholder="Parent Task ID (optional)">
-          </div>
-          <div class="mb-3">
             <label class="form-label">Due date</label>
             <input type="date" class="form-control" name="due_date">
           </div>
           <div class="mb-3">
             <label class="form-label">Labels</label>
             <input type="text" class="form-control" name="labels" placeholder="Comma-separated labels">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Team</label>
-            <input type="text" class="form-control" name="team" placeholder="Team name (optional)">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Start date</label>
-            <input type="date" class="form-control" name="start_date">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Reporter*</label>
-            <input type="text" class="form-control" name="reporter" value="{{ current_user.username }}" required readonly>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Attachment</label>
-            <input type="file" class="form-control" name="attachment">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Linked Work items</label>
-            <input type="text" class="form-control" name="linked_work_items" placeholder="Work item IDs (comma-separated)">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Restrict to</label>
-            <input type="text" class="form-control" name="restrict_to" placeholder="Roles (comma-separated)">
-          </div>
-          <div class="form-check mb-2">
-            <input class="form-check-input" type="checkbox" name="flagged" id="flagged">
-            <label class="form-check-label" for="flagged">Flagged (Impediment)</label>
           </div>
         </div>
         <div class="modal-footer">
@@ -129,6 +104,58 @@
     </div>
   </div>
 </div>
+{% if is_visitor %}
+<!-- Visitor Dashboard -->
+<div class="row mb-4">
+  <div class="col">
+    <div class="card text-center">
+      <div class="card-body">
+        <h5>Available Projects</h5>
+        <p class="display-6">{{ stats.available_projects | default(0) }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h3>Available Projects</h3>
+<div class="row">
+  <div class="col-12">
+    <div class="alert alert-info">
+      <i class="fas fa-info-circle"></i> As a visitor, you can view and apply to join projects. Apply to become a developer to access more features.
+    </div>
+  </div>
+  {% for p in available_projects %}
+    <div class="col-md-6 mb-3">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">
+            <a href="{{ url_for('projects.detail', proj_id=p.id) }}">{{ p.name }}</a>
+          </h5>
+          <p class="card-text">{{ p.description[:100] }}{% if p.description|length > 100 %}...{% endif %}</p>
+          {% if p.labels.all() %}
+          <div class="mb-2">
+            {% for label in p.labels %}
+            <span class="badge bg-primary me-1">{{ label.name }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+          <div class="d-flex justify-content-between align-items-center">
+            <small class="text-muted">Owner: {{ p.owner.username }}</small>
+            <a href="{{ url_for('projects.apply', proj_id=p.id) }}" class="btn btn-success btn-sm">Apply to Join</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <div class="col-12">
+      <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle"></i> No projects are currently available.
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% else %}
+<!-- Regular User Dashboard -->
 <pre>Owned: {{ owned_projects|length }} Shared: {{ shared_projects|length }}</pre>
 <div class="row mb-4">
   <div class="col">
@@ -199,7 +226,10 @@
               </div>
               {% endif %}
             </div>
+              <div>
             <span class="badge bg-primary">Owner</span>
+                <a href="{{ url_for('main.kanban_board', proj_id=p.id) }}" class="btn btn-sm btn-outline-primary ms-2">Kanban</a>
+              </div>
           </div>
         </li>
       {% else %}
@@ -223,7 +253,10 @@
               </div>
               {% endif %}
             </div>
+              <div>
             <span class="badge bg-secondary">Member</span>
+                <a href="{{ url_for('main.kanban_board', proj_id=p.id) }}" class="btn btn-sm btn-outline-primary ms-2">Kanban</a>
+              </div>
           </div>
         </li>
       {% else %}
@@ -232,4 +265,5 @@
     </ul>
   </div>
 </div>
+{% endif %}
 {% endblock %}

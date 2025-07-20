@@ -78,6 +78,37 @@
       </div>
     </div>
     {% endif %}
+
+    <div class="card mt-4">
+      <div class="card-header">
+        <h5>Notifications</h5>
+      </div>
+      <div class="card-body">
+        {% if current_user.id == project.owner_id %}
+          {% set notifications = project.notifications if project.notifications else [] %}
+          {% if notifications|length > 0 %}
+            <ul class="list-group">
+              {% for notification in notifications %}
+                <li class="list-group-item {% if not notification.is_read %}list-group-item-info{% endif %}">
+                  <span>{{ notification.message }}</span>
+                  <small class="text-muted float-end">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                  {% if not notification.is_read and notification.applicant_id and notification.application_id %}
+                    <form method="POST" action="{{ url_for('projects.accept_project_application', proj_id=project.id, notification_id=notification.id) }}" style="display:inline;">
+                      <button type="submit" class="btn btn-success btn-sm ms-2">Accept</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('projects.reject_project_application', proj_id=project.id, notification_id=notification.id) }}" style="display:inline;">
+                      <button type="submit" class="btn btn-danger btn-sm ms-1">Reject</button>
+                    </form>
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted">No notifications for this project.</p>
+          {% endif %}
+        {% endif %}
+      </div>
+    </div>
   </div>
 
   <div class="col-md-4">

@@ -1,19 +1,27 @@
-# controllers/project_controller.py
-
 from models import db
 from models.project import Project, Label, project_labels
 from models.user import User
+from models.project_application import ProjectApplication
 from datetime import datetime
 from utils.email_utils import send_project_invitation, send_project_application
 from sqlalchemy import or_
+from models.notification import Notification
 
-def create_project(owner, name, description=None, labels=None):
+def create_project(owner, name, description=None, labels=None, team_member_ids=None):
     project = Project()
     project.name = name
     project.description = description
     project.owner_id = owner.id
     project.created_at = datetime.utcnow()
     project.members.append(owner)
+    
+    # Handle team member assignment for team managers
+    if team_member_ids and owner.role == 'team_manager':
+        # Add selected team members to project
+        for member_id in team_member_ids:
+            member = User.query.get(member_id)
+            if member and member.role == 'developer':
+                project.members.append(member)
     
     # Handle labels
     if labels:
@@ -127,7 +135,7 @@ def get_popular_labels(limit=10):
 
 def apply_for_project(project_id, applicant, message=None):
     """
-    Apply for a project. This will send an email to the project owner.
+    Apply for a project. This creates a project application record.
     """
     project = Project.query.get(project_id)
     if not project:
@@ -139,17 +147,73 @@ def apply_for_project(project_id, applicant, message=None):
     if project.members.filter_by(id=applicant.id).first():
         return None, "You are already a member of this project"
     
-    # Send application email to project owner
-    send_project_application(
-        applicant_name=applicant.username or applicant.full_name,
-        applicant_email=applicant.email,
-        project_name=project.name,
-        project_id=project.id,
-        message=message,
-        owner_email=project.owner.email
-    )
+    # Check if application already exists
+    existing_application = ProjectApplication.query.filter_by(
+        applicant_id=applicant.id,
+        project_id=project_id,
+        status='pending'
+    ).first()
     
-    return project, None
+    if existing_application:
+        return None, "You have already applied to this project"
+    
+    # Create application
+    application = ProjectApplication()
+    application.applicant_id = applicant.id
+    application.project_id = project_id
+    application.message = message or ""
+    application.status = 'pending'
+    
+    db.session.add(application)
+    db.session.commit()
+    
+    # Create notification for project owner (team manager)
+    notification_message = f"{applicant.username or applicant.full_name} has applied to join your project '{project.name}'."
+    notification = Notification(
+        user_id=project.owner_id,
+        project_id=project.id,
+        message=notification_message,
+        applicant_id=applicant.id,
+        application_id=application.id
+    )
+    db.session.add(notification)
+    db.session.commit()
+    
+    # (No email sent)
+    return application, None
+
+def get_project_applications(project_id):
+    """Get all applications for a specific project"""
+    return ProjectApplication.query.filter_by(project_id=project_id).order_by(ProjectApplication.created_at.desc()).all()
+
+def review_project_application(application_id, reviewer_id, status, notes=None):
+    """Review a project application (approve/reject)"""
+    application = ProjectApplication.query.get(application_id)
+    if not application:
+        return None, "Application not found"
+    
+    application.status = status
+    application.reviewed_at = datetime.utcnow()
+    application.reviewed_by = reviewer_id
+    
+    if status == 'approved':
+        # Add user to project and promote to developer
+        project = application.project
+        applicant = application.applicant
+        
+        if not project.members.filter_by(id=applicant.id).first():
+            project.members.append(applicant)
+        
+        # Promote visitor to developer
+        if applicant.role == 'visitor':
+            applicant.role = 'developer'
+    
+    db.session.commit()
+    return application, None
+
+def get_user_project_applications(user_id):
+    """Get all project applications for a specific user"""
+    return ProjectApplication.query.filter_by(applicant_id=user_id).order_by(ProjectApplication.created_at.desc()).all()
 
 def add_member_to_project(project, user_identifier, inviter=None):
     # Search by email or username

@@ -8,9 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const columns = document.querySelectorAll('.kanban-column');
   let draggingEl = null;
 
-  document.querySelectorAll('.task-card').forEach(card => {
-    card.setAttribute('draggable', true);
-
+  // Only make draggable task cards draggable
+  document.querySelectorAll('.task-card.draggable').forEach(card => {
     card.addEventListener('dragstart', () => {
       draggingEl = card;
       card.classList.add('dragging');
@@ -48,14 +47,20 @@ document.addEventListener('DOMContentLoaded', () => {
           },
           body: `status=${encodeURIComponent(newStatus)}`
         })
-        .then(res => {
-          if (res.ok) {
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
             col.appendChild(draggingEl);
           } else {
+            // Show error message
+            alert(data.error || 'Failed to update task status');
             window.location.reload();
           }
         })
-        .catch(() => window.location.reload());
+        .catch(() => {
+          alert('Network error. Please try again.');
+          window.location.reload();
+        });
       }
     });
   });

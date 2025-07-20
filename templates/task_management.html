@@ -17,6 +17,20 @@
 .task-card:hover {
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
+.task-card.draggable {
+  cursor: grab;
+}
+.task-card.draggable:active {
+  cursor: grabbing;
+}
+.task-card.not-draggable {
+  cursor: default;
+  opacity: 0.8;
+}
+.assignee-badge {
+  font-size: 0.75rem;
+  padding: 2px 6px;
+}
 </style>
 {% endblock %}
 
@@ -28,20 +42,38 @@
   </a>
 </div>
 
+{% if current_user.role == 'developer' %}
+<div class="alert alert-info mb-4">
+  <i class="fas fa-info-circle"></i>
+  <strong>Developer Access:</strong> You can see all tasks but can only move tasks that are assigned to you. 
+  Tasks assigned to others are view-only.
+</div>
+{% endif %}
+
 <div class="row">
   <div class="col-md-3">
     <div class="kanban-column" data-status="todo">
       <h5 class="text-primary mb-3">To Do</h5>
       {% for task in todo %}
-        <div class="card task-card" data-task-id="{{ task.id }}">
+        {% set can_drag = current_user.role in ['admin', 'team_manager'] or current_user.id == project.owner_id or (current_user.role == 'developer' and task.assignee_id == current_user.id) %}
+        <div class="card task-card {% if can_drag %}draggable{% else %}not-draggable{% endif %}" 
+             data-task-id="{{ task.id }}" 
+             {% if can_drag %}draggable="true"{% endif %}>
           <div class="card-body">
             <h6 class="card-title">{{ task.title }}</h6>
             {% if task.description %}
               <p class="card-text small">{{ task.description[:100] }}{% if task.description|length > 100 %}...{% endif %}</p>
             {% endif %}
+            <div class="d-flex justify-content-between align-items-center mt-2">
             {% if task.due_date %}
               <small class="text-muted">Due: {{ task.due_date.strftime('%Y-%m-%d') }}</small>
             {% endif %}
+              {% if task.assignee %}
+                <span class="badge assignee-badge bg-info">@{{ task.assignee.username }}</span>
+              {% else %}
+                <span class="badge assignee-badge bg-secondary">Unassigned</span>
+              {% endif %}
+            </div>
           </div>
         </div>
       {% endfor %}
@@ -52,15 +84,25 @@
     <div class="kanban-column" data-status="in_progress">
       <h5 class="text-warning mb-3">In Progress</h5>
       {% for task in in_progress %}
-        <div class="card task-card" data-task-id="{{ task.id }}">
+        {% set can_drag = current_user.role in ['admin', 'team_manager'] or current_user.id == project.owner_id or (current_user.role == 'developer' and task.assignee_id == current_user.id) %}
+        <div class="card task-card {% if can_drag %}draggable{% else %}not-draggable{% endif %}" 
+             data-task-id="{{ task.id }}" 
+             {% if can_drag %}draggable="true"{% endif %}>
           <div class="card-body">
             <h6 class="card-title">{{ task.title }}</h6>
             {% if task.description %}
               <p class="card-text small">{{ task.description[:100] }}{% if task.description|length > 100 %}...{% endif %}</p>
             {% endif %}
+            <div class="d-flex justify-content-between align-items-center mt-2">
             {% if task.due_date %}
               <small class="text-muted">Due: {{ task.due_date.strftime('%Y-%m-%d') }}</small>
             {% endif %}
+              {% if task.assignee %}
+                <span class="badge assignee-badge bg-info">@{{ task.assignee.username }}</span>
+              {% else %}
+                <span class="badge assignee-badge bg-secondary">Unassigned</span>
+              {% endif %}
+            </div>
           </div>
         </div>
       {% endfor %}
@@ -71,15 +113,25 @@
     <div class="kanban-column" data-status="testing">
       <h5 class="text-info mb-3">Testing</h5>
       {% for task in testing %}
-        <div class="card task-card" data-task-id="{{ task.id }}">
+        {% set can_drag = current_user.role in ['admin', 'team_manager'] or current_user.id == project.owner_id or (current_user.role == 'developer' and task.assignee_id == current_user.id) %}
+        <div class="card task-card {% if can_drag %}draggable{% else %}not-draggable{% endif %}" 
+             data-task-id="{{ task.id }}" 
+             {% if can_drag %}draggable="true"{% endif %}>
           <div class="card-body">
             <h6 class="card-title">{{ task.title }}</h6>
             {% if task.description %}
               <p class="card-text small">{{ task.description[:100] }}{% if task.description|length > 100 %}...{% endif %}</p>
             {% endif %}
+            <div class="d-flex justify-content-between align-items-center mt-2">
             {% if task.due_date %}
               <small class="text-muted">Due: {{ task.due_date.strftime('%Y-%m-%d') }}</small>
             {% endif %}
+              {% if task.assignee %}
+                <span class="badge assignee-badge bg-info">@{{ task.assignee.username }}</span>
+              {% else %}
+                <span class="badge assignee-badge bg-secondary">Unassigned</span>
+              {% endif %}
+            </div>
           </div>
         </div>
       {% endfor %}
@@ -90,13 +142,23 @@
     <div class="kanban-column" data-status="completed">
       <h5 class="text-success mb-3">Completed</h5>
       {% for task in completed %}
-        <div class="card task-card" data-task-id="{{ task.id }}">
+        {% set can_drag = current_user.role in ['admin', 'team_manager'] or current_user.id == project.owner_id or (current_user.role == 'developer' and task.assignee_id == current_user.id) %}
+        <div class="card task-card {% if can_drag %}draggable{% else %}not-draggable{% endif %}" 
+             data-task-id="{{ task.id }}" 
+             {% if can_drag %}draggable="true"{% endif %}>
           <div class="card-body">
             <h6 class="card-title">{{ task.title }}</h6>
             {% if task.description %}
               <p class="card-text small">{{ task.description[:100] }}{% if task.description|length > 100 %}...{% endif %}</p>
             {% endif %}
+            <div class="d-flex justify-content-between align-items-center mt-2">
             <small class="text-muted">Completed</small>
+              {% if task.assignee %}
+                <span class="badge assignee-badge bg-info">@{{ task.assignee.username }}</span>
+              {% else %}
+                <span class="badge assignee-badge bg-secondary">Unassigned</span>
+              {% endif %}
+            </div>
           </div>
         </div>
       {% endfor %}

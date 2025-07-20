@@ -2,8 +2,17 @@ import logging
 from logging.config import fileConfig
 
 from flask import current_app
-
 from alembic import context
+
+# --- PATCH: Ensure app context is pushed ---
+try:
+    app = current_app._get_current_object()
+except RuntimeError:
+    # Not in app context, so import and create app
+    from run import create_app
+    app = create_app()
+    app.app_context().push()
+# --- END PATCH ---
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

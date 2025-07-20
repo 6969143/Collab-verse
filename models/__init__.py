@@ -6,5 +6,9 @@ db = SQLAlchemy()
 from .user import User
 from .project import Project, Label
 from .task import Task
-from .task_member import TaskMember
 from .ticket import Ticket
+from .notification import Notification
+from .task_member import TaskMember
+from .team import Team
+from .role_application import RoleApplication
+from .project_application import ProjectApplication

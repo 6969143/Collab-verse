@@ -225,9 +225,11 @@
             <a href="{{ url_for('projects.list_projects') }}" class="btn btn-outline-primary">
               <i class="fas fa-project-diagram"></i> View Projects
             </a>
+            {% if user.role in ['admin', 'team_manager'] %}
             <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#createProjectModal">
               <i class="fas fa-plus"></i> Create Project
             </button>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -289,6 +291,7 @@
   </div>
 </div>
 
+{% if user.role in ['admin', 'team_manager'] %}
 <!-- Create Project Modal -->
 <div class="modal fade" id="createProjectModal" tabindex="-1" aria-labelledby="createProjectModalLabel" aria-hidden="true">
   <div class="modal-dialog">
@@ -316,4 +319,51 @@
     </div>
   </div>
 </div>
+{% endif %}
+
+    <!-- Promotion Request for Developers -->
+    {% if user.role == 'developer' %}
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-arrow-up"></i> Promotion Request</h5>
+      </div>
+      <div class="card-body">
+        <p class="text-muted">Want to become a Team Manager? Submit your application for admin approval.</p>
+        <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#promotionModal">
+          <i class="fas fa-arrow-up"></i> Request Promotion
+        </button>
+      </div>
+    </div>
+    <!-- Promotion Modal -->
+    <div class="modal fade" id="promotionModal" tabindex="-1" aria-labelledby="promotionModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <form method="POST" action="{{ url_for('main.request_promotion') }}">
+            <div class="modal-header">
+              <h5 class="modal-title" id="promotionModalLabel">Promotion Request</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label class="form-label">Why do you want to become a Team Manager?</label>
+                <textarea class="form-control" name="reason" required></textarea>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Relevant Experience</label>
+                <textarea class="form-control" name="experience" required></textarea>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Key Skills</label>
+                <textarea class="form-control" name="skills" required></textarea>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary">Submit Request</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endif %}
 {% endblock %} 

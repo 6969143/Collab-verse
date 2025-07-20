@@ -11,6 +11,7 @@ from routes.auth_routes import auth_bp
 from routes.project_routes import project_bp
 from routes.task_routes import task_bp
 from routes.main_routes import main_bp
+from routes.role_routes import role_bp
 
 def create_app():
     app = Flask(__name__,
@@ -39,6 +40,7 @@ def create_app():
     app.register_blueprint(project_bp, url_prefix="/projects")
     app.register_blueprint(task_bp,    url_prefix="/tasks")
     app.register_blueprint(main_bp)  
+    app.register_blueprint(role_bp,    url_prefix="/role")
     # Register tickets blueprint under /tickets to avoid conflict with /projects
     app.register_blueprint(ticket_bp, url_prefix="/tickets")
     # Register admin blueprint

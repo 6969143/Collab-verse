@@ -6,12 +6,10 @@ from models import db
 from utils.jwt_utils import generate_token
 
 def register_user(full_name, email, password, username):
-    # ensure unique email
     exists = User.query.filter_by(email=email).first()
     if exists:
         return None, "Email already taken"
     
-    # ensure username is unique
     username_exists = User.query.filter_by(username=username).first()
     if username_exists:
         return None, "Username already taken"
@@ -22,7 +20,7 @@ def register_user(full_name, email, password, username):
     user.email = email
     user.password_hash = pwd_hash
     user.username = username
-    user.role = 'user'
+    user.role = 'visitor'
     
     db.session.add(user)
     db.session.commit()
@@ -32,7 +30,6 @@ def authenticate_user(identifier, password):
     user = User.query.filter((User.email == identifier) | (User.username == identifier)).first()
     if not user or not check_password_hash(user.password_hash, password):
         return None, "Invalid credentials"
-    # log in via Flask-Login
     login_user(user)
 
     token = generate_token(identity=user.id)

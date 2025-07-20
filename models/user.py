@@ -10,8 +10,8 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(128), nullable=False)
     role = db.Column(
-        db.Enum('admin', 'user', name='user_roles'),
-        default='user',
+        db.Enum('visitor', 'developer', 'team_manager', 'admin', name='user_roles'),
+        default='visitor',
         nullable=False
     )
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -29,6 +29,10 @@ class User(db.Model, UserMixin):
     location = db.Column(db.String(100))
     bio = db.Column(db.Text)
     avatar_url = db.Column(db.String(255))
+
+    # Team management fields
+    team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=True)
+    is_team_leader = db.Column(db.Boolean, default=False)
 
     # Relationships
     owned_projects = db.relationship(
@@ -72,6 +76,48 @@ class User(db.Model, UserMixin):
         lazy='dynamic',
         cascade='all, delete-orphan'
     )
+    
+    # Role applications
+    role_applications = db.relationship(
+        'RoleApplication',
+        back_populates='applicant',
+        lazy='dynamic',
+        cascade='all, delete-orphan',
+        foreign_keys='RoleApplication.applicant_id'
+    )
+    
+    # Project applications
+    project_applications = db.relationship(
+        'ProjectApplication',
+        back_populates='applicant',
+        lazy='dynamic',
+        cascade='all, delete-orphan',
+        foreign_keys='ProjectApplication.applicant_id'
+    )
 
     def __repr__(self):
         return f"<User {self.username}>"
+    
+    def is_admin(self):
+        return self.role == 'admin'
+    
+    def is_team_manager(self):
+        return self.role == 'team_manager'
+    
+    def is_developer(self):
+        return self.role == 'developer'
+    
+    def is_visitor(self):
+        return self.role == 'visitor'
+    
+    def can_create_projects(self):
+        return self.role in ['team_manager', 'admin']
+    
+    def can_manage_teams(self):
+        return self.role in ['team_manager', 'admin']
+    
+    def can_assign_tasks(self):
+        return self.role in ['team_manager', 'admin']
+    
+    def can_promote_users(self):
+        return self.role in ['team_manager', 'admin']

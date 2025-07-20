@@ -160,4 +160,102 @@ Your Project Management Team
     </html>
     """
     
-    return send_email(owner_email, subject, body, html_body) 
+    return send_email(owner_email, subject, body, html_body)
+
+def send_role_application_notification(application):
+    """Send notification to admin about new role application"""
+    subject = f"New Role Application: {application.applicant.full_name}"
+    
+    # Plain text version
+    body = f"""
+Hello Admin!
+
+A new role application has been submitted.
+
+Application Details:
+- Applicant: {application.applicant.full_name} ({application.applicant.email})
+- Requested Role: {application.requested_role}
+- Reason: {application.reason}
+- Experience: {application.experience}
+- Skills: {application.skills}
+
+To review this application, please visit the admin dashboard.
+
+Best regards,
+Your Project Management Team
+    """.strip()
+    
+    # HTML version
+    html_body = f"""
+    <html>
+    <body>
+        <h2>New Role Application</h2>
+        <p>Hello Admin!</p>
+        <p>A new role application has been submitted.</p>
+        
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+            <h4>Application Details:</h4>
+            <ul>
+                <li><strong>Applicant:</strong> {application.applicant.full_name} ({application.applicant.email})</li>
+                <li><strong>Requested Role:</strong> {application.requested_role}</li>
+                <li><strong>Reason:</strong> {application.reason}</li>
+                <li><strong>Experience:</strong> {application.experience}</li>
+                <li><strong>Skills:</strong> {application.skills}</li>
+            </ul>
+        </div>
+        
+        <p>To review this application, please visit the admin dashboard.</p>
+        <p>Best regards,<br>Your Project Management Team</p>
+    </body>
+    </html>
+    """
+    
+    # Send to admin (you might want to get admin email from config or database)
+    admin_email = "admin@projecttracker.com"
+    return send_email(admin_email, subject, body, html_body)
+
+def send_role_application_response(application):
+    """Send response to applicant about their role application"""
+    status_text = "approved" if application.status == "approved" else "rejected"
+    subject = f"Role Application {status_text.title()}: {application.requested_role}"
+    
+    # Plain text version
+    body = f"""
+Hello {application.applicant.full_name}!
+
+Your application for the role of {application.requested_role} has been {status_text}.
+
+Application Details:
+- Requested Role: {application.requested_role}
+- Status: {application.status.title()}
+
+{f"Admin Notes: {application.admin_notes}" if application.admin_notes else ""}
+
+Best regards,
+Your Project Management Team
+    """.strip()
+    
+    # HTML version
+    html_body = f"""
+    <html>
+    <body>
+        <h2>Role Application {status_text.title()}</h2>
+        <p>Hello {application.applicant.full_name}!</p>
+        <p>Your application for the role of <strong>{application.requested_role}</strong> has been <strong>{status_text}</strong>.</p>
+        
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+            <h4>Application Details:</h4>
+            <ul>
+                <li><strong>Requested Role:</strong> {application.requested_role}</li>
+                <li><strong>Status:</strong> {application.status.title()}</li>
+            </ul>
+        </div>
+        
+        {f'<div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; margin: 15px 0;"><h4>Admin Notes:</h4><p>{application.admin_notes}</p></div>' if application.admin_notes else ''}
+        
+        <p>Best regards,<br>Your Project Management Team</p>
+    </body>
+    </html>
+    """
+    
+    return send_email(application.applicant.email, subject, body, html_body) 

@@ -17,18 +17,45 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-def user_required(f):
-    """Decorator to require user role (or admin)"""
+def team_manager_required(f):
+    """Decorator to require team manager role (or admin)"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated:
             flash("Please log in to access this page.", "warning")
             return redirect(url_for("auth.login"))
         
-        if current_user.role not in ["user", "admin"]:
-            flash("Access denied. User privileges required.", "danger")
+        if current_user.role not in ["team_manager", "admin"]:
+            flash("Access denied. Team Manager privileges required.", "danger")
             return redirect(url_for("main.dashboard"))
         
+        return f(*args, **kwargs)
+    return decorated_function
+
+def developer_required(f):
+    """Decorator to require developer role (or team manager or admin)"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            flash("Please log in to access this page.", "warning")
+            return redirect(url_for("auth.login"))
+        
+        if current_user.role not in ["developer", "team_manager", "admin"]:
+            flash("Access denied. Developer privileges required.", "danger")
+            return redirect(url_for("main.dashboard"))
+        
+        return f(*args, **kwargs)
+    return decorated_function
+
+def user_required(f):
+    """Decorator to require any authenticated user (all roles)"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            flash("Please log in to access this page.", "warning")
+            return redirect(url_for("auth.login"))
+        
+        # Allow all authenticated users (visitor, developer, team_manager, admin)
         return f(*args, **kwargs)
     return decorated_function
 

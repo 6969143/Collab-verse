@@ -63,7 +63,7 @@ def create_from_dashboard():
     restrict_to = request.form.get("restrict_to")
     flagged = bool(request.form.get("flagged"))
 
-    # Call a new controller function to handle all fields (to be implemented)
+    # Call controller function with simplified fields
     task, err = create_task_full(
         project_id=project_id,
         creator=current_user,
@@ -74,15 +74,7 @@ def create_from_dashboard():
         status=status,
         assignee=assignee,
         priority=priority,
-        parent=parent,
-        labels=labels,
-        team=team,
-        start_date=start_date,
-        reporter=reporter,
-        attachment=attachment,
-        linked_work_items=linked_work_items,
-        restrict_to=restrict_to,
-        flagged=flagged
+        labels=labels
     )
     if err:
         flash(err, "danger")
@@ -96,21 +88,33 @@ def create_from_dashboard():
 @task_bp.route("/<int:task_id>/status", methods=["POST"])
 @login_required
 def change_status(task_id):
-    new_status = request.form.get("status")
-    task, err = update_task_status(task_id, new_status, current_user)
-    if err:
+    print(f"[DEBUG] change_status called for task_id={task_id}, user={current_user.username}, status={request.form.get('status')}")
+    try:
+        new_status = request.form.get("status")
+        task, err = update_task_status(task_id, new_status, current_user)
+        print(f"[DEBUG] update_task_status result: task={task}, err={err}")
+        if err:
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                print(f"[DEBUG] AJAX error: {err}")
+                return jsonify({"success": False, "error": err}), 400
+            flash(err, "danger")
+            return redirect(request.referrer or url_for("main.index"))
+        if task:
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                print(f"[DEBUG] AJAX success for task_id={task_id}")
+                return jsonify({"success": True})
+            flash(f"Task '{task.title}' moved to {new_status}.", "success")
+            return redirect(url_for("main.kanban_board", proj_id=task.project_id))
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            return jsonify({"success": False, "error": err}), 400
-        flash(err, "danger")
+            print(f"[DEBUG] AJAX unknown error")
+            return jsonify({"success": False, "error": "Unknown error"}), 400
+        return redirect(url_for("main.index"))
+    except Exception as e:
+        print(f"[DEBUG] Exception in change_status: {e}")
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return jsonify({"success": False, "error": f"Server error: {str(e)}"}), 500
+        flash("Server error while updating task status.", "danger")
         return redirect(request.referrer or url_for("main.index"))
-    if task:
-        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            return jsonify({"success": True})
-        flash(f"Task '{task.title}' moved to {new_status}.", "success")
-        return redirect(url_for("main.kanban_board", proj_id=task.project_id))
-    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return jsonify({"success": False, "error": "Unknown error"}), 400
-    return redirect(url_for("main.index"))
 
 # Assign a member to a task
 @task_bp.route("/<int:task_id>/assign", methods=["POST"])

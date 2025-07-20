@@ -12,22 +12,61 @@ from controllers.project_controllers import (
     get_popular_labels,
     apply_for_project
 )
+from models.notification import Notification
+from models.project_application import ProjectApplication
+from models.user import User
+from models.project import Project
+from flask import flash, redirect, url_for
+from models import db
 
 project_bp = Blueprint("projects", __name__)
 
 @project_bp.route("/create", methods=["GET", "POST"])
 @login_required
 def create():
-    # Allow both admin and regular users to create projects
+    # Only allow team managers and admins to create projects
+    if current_user.role not in ['admin', 'team_manager']:
+        flash("Only team managers and admins can create projects.", "warning")
+        return redirect(url_for("projects.search_projects"))
+    
     if request.method == "POST":
         name = request.form["name"]
         desc = request.form.get("description")
         labels = request.form.get("labels")
-        proj = create_project(current_user, name, desc, labels)
+        team_member_ids = request.form.getlist("team_members")  # Get selected team members
+        
+        proj = create_project(current_user, name, desc, labels, team_member_ids)
         flash(f"Project '{proj.name}' created.", "success")
         return redirect(url_for("projects.detail", proj_id=proj.id))
 
-    return render_template("create_project.html")
+    # Get team members for team managers
+    team_members = []
+    if current_user.role == 'team_manager':
+        # Get all developers as team members
+        import sqlite3
+        conn = sqlite3.connect('tracker.db')
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT id, username, email, full_name 
+            FROM user 
+            WHERE role = 'developer'
+        """)
+        members_data = cursor.fetchall()
+        
+        from models.user import User
+        for member_data in members_data:
+            member = User()
+            member.id = member_data[0]
+            member.username = member_data[1]
+            member.email = member_data[2]
+            member.full_name = member_data[3]
+            team_members.append(member)
+        
+        conn.close()
+        print(f"Found {len(team_members)} team members for {current_user.username}")
+
+    return render_template("create_project.html", team_members=team_members)
 
 
 @project_bp.route("/")
@@ -146,3 +185,40 @@ def close(proj_id):
     close_project(proj)
     flash("Project closed.", "info")
     return redirect(url_for("projects.detail", proj_id=proj_id))
+
+@project_bp.route('/<int:proj_id>/notification/<int:notification_id>/accept', methods=['POST'])
+@login_required
+def accept_project_application(proj_id, notification_id):
+    notification = Notification.query.get_or_404(notification_id)
+    if notification.user_id != current_user.id:
+        flash('You are not authorized to perform this action.', 'danger')
+        return redirect(url_for('projects.detail', proj_id=proj_id))
+    application = ProjectApplication.query.get(notification.application_id)
+    applicant = User.query.get(notification.applicant_id)
+    project = Project.query.get(proj_id)
+    if not application or not applicant or not project:
+        flash('Invalid application or project.', 'danger')
+        return redirect(url_for('projects.detail', proj_id=proj_id))
+    # Add applicant to project members
+    if not project.members.filter_by(id=applicant.id).first():
+        project.members.append(applicant)
+    application.status = 'approved'
+    notification.is_read = True
+    db.session.commit()
+    flash(f"{applicant.username} has been added to the project.", 'success')
+    return redirect(url_for('projects.detail', proj_id=proj_id))
+
+@project_bp.route('/<int:proj_id>/notification/<int:notification_id>/reject', methods=['POST'])
+@login_required
+def reject_project_application(proj_id, notification_id):
+    notification = Notification.query.get_or_404(notification_id)
+    if notification.user_id != current_user.id:
+        flash('You are not authorized to perform this action.', 'danger')
+        return redirect(url_for('projects.detail', proj_id=proj_id))
+    application = ProjectApplication.query.get(notification.application_id)
+    if application:
+        application.status = 'rejected'
+    notification.is_read = True
+    db.session.commit()
+    flash('Application has been rejected.', 'info')
+    return redirect(url_for('projects.detail', proj_id=proj_id))
