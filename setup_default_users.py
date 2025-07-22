@@ -70,7 +70,7 @@ def setup_default_users():
                 label = Label()
                 label.name = label_name
                 db.session.add(label)
-                print(f"✅ Created label: {label_name}")
+                print(f"Created label: {label_name}")
         
         # Create sample projects for team manager
         if team_manager:
@@ -108,7 +108,7 @@ def setup_default_users():
                         if label:
                             project.labels.append(label)
                     
-                    print(f"✅ Created project: {project_data['name']}")
+                    print(f"Created project: {project_data['name']}")
         
         db.session.commit()
         print("\n🎉 Default setup completed successfully!")

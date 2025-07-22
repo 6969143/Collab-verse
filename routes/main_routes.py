@@ -65,8 +65,8 @@ def dashboard():
                  ).count()
 
         # Get user's projects
-        owned_projects = current_user.owned_projects.all()
-        shared_projects = current_user.projects.all()
+        owned_projects = list(current_user.owned_projects)
+        shared_projects = list(current_user.projects)
 
         # Get team members for team managers
         team_members = []

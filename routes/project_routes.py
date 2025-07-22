@@ -202,6 +202,9 @@ def accept_project_application(proj_id, notification_id):
     # Add applicant to project members
     if not project.members.filter_by(id=applicant.id).first():
         project.members.append(applicant)
+    # Promote visitor to developer if needed
+    if applicant.role == 'visitor':
+        applicant.role = 'developer'
     application.status = 'approved'
     notification.is_read = True
     db.session.commit()

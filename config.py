@@ -12,7 +12,6 @@ class Config:
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    # Use cookies to store JWT (for front-end convenience)
     JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", SECRET_KEY)
     JWT_TOKEN_LOCATION = ["cookies"]
     JWT_ACCESS_COOKIE_PATH = "/"
