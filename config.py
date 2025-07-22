@@ -8,7 +8,7 @@ class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY", "change-me")
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         "DATABASE_URL",
-        f"sqlite:///{os.path.join(BASE_DIR, 'tracker.db')}"
+        f"postgresql://collabverse_user:pGBNI06wg3BWkTTxjJ3tJUr0z9CHVlKS@dpg-d1vkt4k9c44c73dv8e80-a/collabverse"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
